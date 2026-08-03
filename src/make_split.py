@@ -1,0 +1,159 @@
+"""Build stratified K-fold train/val image lists.
+
+A plain random split is unusable here: `aluminum_packaging` has 13 boxes in the
+whole dataset, so a random 10% val slice lands 0-2 of them and that class's AP
+becomes a coin flip worth +-2.9 mAP points of pure noise.
+
+This uses iterative stratification (Sechidis et al. 2011), the standard method
+for multi-label data -- an image carries a *set* of classes, so ordinary
+per-label stratification does not apply. Rarest class is placed first, since it
+has the least freedom, and each image goes to whichever fold is currently most
+short of that class.
+
+Folds are written as image-path lists rather than by copying files, so the 15k
+JPEGs stay where they are.
+
+    python src/make_split.py --folds 5
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from collections import Counter, defaultdict
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def default_root() -> str:
+    """Project root in the form the Windows interpreter needs.
+
+    Training runs under Windows Python while these scripts may be invoked from
+    WSL, so a `/mnt/c/...` path has to be emitted as `C:/...`. Derived from this
+    file's location rather than hardcoded: a hardcoded root silently invalidates
+    every generated path the moment the project directory is renamed.
+    """
+    parts = ROOT.parts
+    if len(parts) > 3 and parts[1] == "mnt" and len(parts[2]) == 1:
+        return f"{parts[2].upper()}:/" + "/".join(parts[3:])
+    return ROOT.as_posix()
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--coco", type=Path, default=ROOT / "data/train_dataset/train_label.json")
+    p.add_argument("--images", type=Path, default=ROOT / "data/train_dataset/images")
+    p.add_argument("--out", type=Path, default=ROOT / "data/splits")
+    p.add_argument("--configs", type=Path, default=ROOT / "configs")
+    p.add_argument("--folds", type=int, default=5)
+    p.add_argument("--win-root", default=default_root())
+    return p.parse_args()
+
+
+def iterative_stratification(
+    labels: dict[str, set[int]], n_folds: int
+) -> dict[str, int]:
+    """Assign each key to a fold, keeping every class's distribution even."""
+    ratio = 1.0 / n_folds
+    remaining = {k: set(v) for k, v in labels.items()}
+
+    # How many items of each class each fold still wants.
+    total = Counter()
+    for cls_set in labels.values():
+        total.update(cls_set)
+    desired = [{c: n * ratio for c, n in total.items()} for _ in range(n_folds)]
+    capacity = [len(labels) * ratio for _ in range(n_folds)]
+
+    by_class: dict[int, set[str]] = defaultdict(set)
+    for k, cls_set in labels.items():
+        for c in cls_set:
+            by_class[c].add(k)
+
+    assignment: dict[str, int] = {}
+    unlabelled = [k for k, v in labels.items() if not v]
+
+    while True:
+        # Rarest class with items still unassigned goes first.
+        pending = {c: ks for c, ks in by_class.items() if ks}
+        if not pending:
+            break
+        cls = min(pending, key=lambda c: (len(pending[c]), c))
+
+        for key in sorted(pending[cls]):
+            # Fold that most needs this class; ties broken by overall capacity.
+            fold = max(
+                range(n_folds), key=lambda f: (desired[f][cls], capacity[f], -f)
+            )
+            assignment[key] = fold
+            capacity[fold] -= 1
+            for c in remaining[key]:
+                desired[fold][c] -= 1
+                by_class[c].discard(key)
+            remaining[key].clear()
+
+    # Images with no annotations (none here, but keep the function total).
+    for i, key in enumerate(sorted(unlabelled)):
+        fold = max(range(n_folds), key=lambda f: (capacity[f], -f))
+        assignment[key] = fold
+        capacity[fold] -= 1
+    return assignment
+
+
+def main() -> None:
+    args = parse_args()
+    coco = json.loads(args.coco.read_text(encoding="utf-8"))
+    names = {c["id"]: c["name"] for c in coco["categories"]}
+    filenames = {img["id"]: img["filename"] for img in coco["images"]}
+
+    classes: dict[str, set[int]] = {i: set() for i in filenames}
+    counts: dict[str, Counter] = defaultdict(Counter)
+    for ann in coco["annotations"]:
+        classes[ann["image_id"]].add(ann["category_id"])
+        counts[ann["image_id"]][ann["category_id"]] += 1
+
+    assignment = iterative_stratification(classes, args.folds)
+
+    args.out.mkdir(parents=True, exist_ok=True)
+    img_dir = f"{args.win_root}/data/train_dataset/images"
+    for f in range(args.folds):
+        val = sorted(k for k, v in assignment.items() if v == f)
+        train = sorted(k for k, v in assignment.items() if v != f)
+        for split, keys in (("train", train), ("val", val)):
+            lines = [f"{img_dir}/{filenames[k]}" for k in keys]
+            (args.out / f"fold{f}_{split}.txt").write_text("\n".join(lines) + "\n")
+
+    # One Ultralytics dataset config per fold. Written by hand rather than via
+    # pyyaml so this script stays stdlib-only and runs under any interpreter.
+    args.configs.mkdir(parents=True, exist_ok=True)
+    for f in range(args.folds):
+        body = "\n".join(f"  {cid}: {names[cid]}" for cid in sorted(names))
+        (args.configs / f"fold{f}.yaml").write_text(
+            f"# generated by src/make_split.py -- do not edit by hand\n"
+            f"path: {args.win_root}/data\n"
+            f"train: splits/fold{f}_train.txt\n"
+            f"val: splits/fold{f}_val.txt\n"
+            f"names:\n{body}\n",
+            encoding="utf-8",
+        )
+
+    # Report how many boxes of each class each fold's val slice actually holds.
+    per_fold = [Counter() for _ in range(args.folds)]
+    for k, f in assignment.items():
+        per_fold[f].update(counts[k])
+    total = Counter()
+    for c in per_fold:
+        total.update(c)
+
+    print(f"folds: {args.folds}  images/fold: {[sum(1 for v in assignment.values() if v == f) for f in range(args.folds)]}")
+    print(f"\nval-slice box counts per fold (total -> f0..f{args.folds - 1}):")
+    print(f"{'class':<34}{'total':>7}   " + "".join(f"{'f'+str(f):>6}" for f in range(args.folds)))
+    for cid in sorted(names, key=lambda c: total[c]):
+        row = "".join(f"{per_fold[f][cid]:>6}" for f in range(args.folds))
+        flag = "  <-- thin" if min(per_fold[f][cid] for f in range(args.folds)) < 3 else ""
+        print(f"{names[cid]:<34}{total[cid]:>7}   {row}{flag}")
+    print(f"\nwritten to {args.out}")
+
+
+if __name__ == "__main__":
+    main()

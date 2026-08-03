@@ -1,0 +1,36 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# Vendored ultralytics -- pinned clone, see README for the exact checkout
+vendor/
+
+# Data folder
+data/
+runs/
+
+# Model weights, auto-downloaded or produced by training
+*.pt
+*.onnx
+*.engine
+
+# Generated and machine-specific -- regenerate with src/make_split.py
+configs/fold*.yaml
+
+# Environment variables
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

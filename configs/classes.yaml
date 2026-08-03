@@ -1,0 +1,36 @@
+nc: 34
+names:
+  0: plastic_bottle
+  1: plastic_bottle_cap
+  2: non_pet_food_beverage_container
+  3: non_food_plastic_bottle
+  4: takeaway_beverage_cup
+  5: straw
+  6: disposable_tableware
+  7: plastic_bag
+  8: food_wrapper
+  9: metal_can
+  10: cigarette_butt
+  11: lighter
+  12: drink_carton
+  13: glass_bottle
+  14: fishing_net_rope
+  15: fishing_buoy_float
+  16: fishing_gear
+  17: syringe_needle
+  18: toothbrush
+  19: other
+  20: plastic_lid
+  21: cup
+  22: foam_buoy_float
+  23: cigarette_pack
+  24: textile
+  25: net_like_item
+  26: anthropogenic_fragment
+  27: disposable_food_container
+  28: soft_float
+  29: foam_container
+  30: non_pet_food_container
+  31: non_food_plastic_container
+  32: aluminum_packaging
+  33: fish_trap_and_bait
