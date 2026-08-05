@@ -782,11 +782,13 @@ rm -f ~/data/train_dataset/labels.cache   # 這步不能省！</code></pre>
 
 <h2 id="c11"><span class="num">11</span>Git 與版控決策</h2>
 
-<h3>追蹤的檔案（13 個）</h3>
+<h3>追蹤的檔案（15 個）</h3>
 <pre><code>.gitattributes  .gitignore  .gitmodules  README.md
+project-notes.html
 configs/classes.yaml
 requirements.txt  requirements.lock.txt
-src/*.py
+src/paths.py  src/coco_to_yolo.py  src/make_split.py
+src/train.py  src/predict.py  src/evaluation.py
 vendor/ultralytics   ← submodule 指標，不是 1030 個檔案</code></pre>
 
 <h3>刻意不追蹤的東西</h3>
