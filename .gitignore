@@ -5,8 +5,7 @@ __pycache__/
 # Virtual environment
 .venv/
 
-# Vendored ultralytics -- pinned clone, see README for the exact checkout
-vendor/
+# vendor/ultralytics is a git submodule, not ignored -- see .gitmodules
 
 # Data folder
 data/

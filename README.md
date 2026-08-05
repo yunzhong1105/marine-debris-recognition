@@ -31,12 +31,31 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 `vendor/ultralytics` 是 editable install，代表 `import ultralytics` 讀到的是那份原始碼，改了立刻生效、不需重裝。版本 pin 在 tag `v8.4.115`，因為 ultralytics 幾乎每天發版（三天內 8.4.110→115），比賽期間讓它浮動會導致分數無法重現。
 
-`vendor/` 不進版控（它自己就是個 git repo）。全新 clone 之後要自己補上：
+### 在新機器上完整安裝
+
+`vendor/ultralytics` 是 **git submodule**，記錄了確切的 commit（比 tag 更嚴格——tag 是可以被移動的）。所以 clone 時要加 `--recurse-submodules`：
 
 ```powershell
-git clone https://github.com/ultralytics/ultralytics vendor/ultralytics
-git -C vendor/ultralytics checkout v8.4.115
+git clone --recurse-submodules https://github.com/yunzhong1105/marine-debris-recognition.git
+cd marine-debris-recognition
+
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 pip install -e vendor\ultralytics
+```
+
+已經 clone 但忘了加 `--recurse-submodules`（此時 `vendor/ultralytics` 會是空目錄）：
+
+```powershell
+git submodule update --init --recursive
+```
+
+資料集不在版控裡，要另外取得 `data/train_dataset/`，然後：
+
+```powershell
+python src\coco_to_yolo.py
+python src\make_split.py --folds 5
 ```
 
 ### 搬動或改名專案目錄之後

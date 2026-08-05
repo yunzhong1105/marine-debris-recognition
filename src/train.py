@@ -17,11 +17,12 @@ import argparse
 import os
 from pathlib import Path
 
-# Must precede the torch import. Training peaks at ~6.1GB of the 7.4GB free, and
-# Ultralytics validates at batch*2, so the val pass allocates into a heap the
-# training pass has already fragmented. Expandable segments let the allocator
-# grow existing blocks instead of demanding fresh contiguous ones.
-os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+# Must precede the torch import. Windows does not support expandable_segments
+# (torch warns and ignores it), so this buys nothing here -- it is kept only so
+# the same script helps on a Linux box. The fragmentation problem it would have
+# solved is handled by ValBatchCappedTrainer below.
+# PYTORCH_CUDA_ALLOC_CONF is the deprecated spelling as of torch 2.9.
+os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -77,7 +78,18 @@ def main() -> None:
     data = args.data or ROOT / f"configs/fold{args.fold}.yaml"
     name = args.name or f"{Path(args.model).stem}_{args.imgsz}_fold{args.fold}"
 
-    model = YOLO(args.model)
+    weights, resume = args.model, False
+    if args.resume:
+        last = ROOT / "runs" / name / "weights/last.pt"
+        if not last.exists():
+            raise SystemExit(f"nothing to resume from: {last} does not exist")
+        # Hand upstream the explicit checkpoint. `resume=True` makes it call
+        # get_latest_run(), which picks whichever run directory was written to
+        # most recently -- not necessarily the one --name refers to.
+        weights, resume = last, str(last)
+        print(f"resuming from {last}")
+
+    model = YOLO(weights)
     model.train(
         trainer=build_trainer(),
         data=str(data),
@@ -93,7 +105,7 @@ def main() -> None:
         project=str(ROOT / "runs"),
         name=name,
         exist_ok=True,
-        resume=args.resume,
+        resume=resume,
         seed=0,
         plots=True,
     )

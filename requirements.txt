@@ -1,0 +1,19 @@
+# Python 3.12. Install with:
+#     python -m venv .venv
+#     .\.venv\Scripts\Activate.ps1
+#     pip install -r requirements.txt
+#     pip install -e vendor\ultralytics
+#
+# ultralytics is deliberately absent from this file: it lives in vendor/ as a
+# pinned submodule and is installed editable so its source stays patchable.
+# It pulls in numpy, opencv, matplotlib, pyyaml and the rest transitively.
+
+# PyTorch with CUDA 12.6. The RTX 4060 is sm_89. cu128/cu129 wheels exist, but
+# cu126 is the combination this project has actually been validated on -- during
+# a competition, reproducibility beats being current.
+--extra-index-url https://download.pytorch.org/whl/cu126
+torch==2.9.1+cu126
+torchvision==0.24.1+cu126
+
+# COCO mAP@0.5 in src/evaluation.py, so local scores match the leaderboard.
+pycocotools==2.0.11

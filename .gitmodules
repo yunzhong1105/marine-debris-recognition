@@ -1,0 +1,3 @@
+[submodule "vendor/ultralytics"]
+	path = vendor/ultralytics
+	url = https://github.com/ultralytics/ultralytics.git
