@@ -19,14 +19,14 @@ import json
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from paths import DATA, PROJECT as ROOT
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--coco", type=Path, default=ROOT / "data/train_dataset/train_label.json")
-    p.add_argument("--images", type=Path, default=ROOT / "data/train_dataset/images")
-    p.add_argument("--labels", type=Path, default=ROOT / "data/train_dataset/labels")
+    p.add_argument("--coco", type=Path, default=DATA / "train_dataset/train_label.json")
+    p.add_argument("--images", type=Path, default=DATA / "train_dataset/images")
+    p.add_argument("--labels", type=Path, default=DATA / "train_dataset/labels")
     p.add_argument("--names-out", type=Path, default=ROOT / "configs/classes.yaml")
     p.add_argument(
         "--min-size",

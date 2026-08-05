@@ -28,14 +28,15 @@ import json
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from paths import DATA
+
 HEADER = ["image_filename", "label_id", "x", "y", "w", "h", "confidence"]
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--pred", type=Path, required=True, help="submission.csv to score")
-    p.add_argument("--gt", type=Path, default=ROOT / "data/train_dataset/train_label.json")
+    p.add_argument("--gt", type=Path, default=DATA / "train_dataset/train_label.json")
     p.add_argument(
         "--split",
         type=Path,
