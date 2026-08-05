@@ -48,6 +48,30 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def relax_shm_pressure() -> None:
+    """Share worker tensors through files when /dev/shm is too small.
+
+    Docker defaults /dev/shm to 64 MB. DataLoader workers hand tensors to the
+    parent through shared memory, so on a container at imgsz 1280 they die with
+    "Bus error / No space left on device" long before the GPU is the limit --
+    and the traceback blames the dataloader, not the container.
+
+    The file_system strategy routes the same traffic through regular files. It
+    is slightly slower but needs no container privileges, which matters on a
+    managed Jupyter host where --shm-size is not ours to set.
+    """
+    import torch.multiprocessing as mp
+
+    shm = Path("/dev/shm")
+    if not shm.exists():
+        return
+    stat = os.statvfs(shm)
+    gib = stat.f_blocks * stat.f_frsize / 2**30
+    if gib < 2:
+        mp.set_sharing_strategy("file_system")
+        print(f"/dev/shm is only {gib:.2f} GiB -- switching to file_system tensor sharing")
+
+
 def build_trainer():
     """DetectionTrainer that validates at the training batch size, not twice it.
 
@@ -74,6 +98,8 @@ def build_trainer():
 def main() -> None:
     args = parse_args()
     from ultralytics import YOLO
+
+    relax_shm_pressure()
 
     data = args.data or ROOT / f"configs/fold{args.fold}.yaml"
     name = args.name or f"{Path(args.model).stem}_{args.imgsz}_fold{args.fold}"
