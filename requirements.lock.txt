@@ -1,0 +1,54 @@
+# Exact transitive versions, captured 2026-08-05. This is the forensic record --
+# use it to reproduce a score weeks later, or to bisect when an upgrade breaks
+# something. For normal installs use requirements.txt.
+#
+# Regenerate with:
+#     python -m pip freeze | Select-String -NotMatch "ultralytics\.git" > requirements.lock.txt
+# then restore the two header lines below, because pip freeze drops both.
+#
+# 1. pip freeze omits --extra-index-url, so a raw freeze cannot install torch:
+#    PyPI carries no +cu126 builds and pip fails with "No matching distribution".
+# 2. pip freeze renders the editable install as
+#    "-e git+https://github.com/ultralytics/ultralytics.git@<sha>#egg=ultralytics",
+#    which re-clones ultralytics into ./src/ and shadows the vendor/ submodule.
+#    Any local patch to vendor/ would then silently stop taking effect.
+#    ultralytics is therefore excluded here; install it with
+#    "pip install -e vendor\ultralytics" after this file.
+
+--extra-index-url https://download.pytorch.org/whl/cu126
+
+certifi==2026.7.22
+charset-normalizer==3.4.9
+contourpy==1.3.3
+cycler==0.12.1
+filelock==3.29.0
+fonttools==4.63.0
+fsspec==2026.4.0
+idna==3.18
+Jinja2==3.1.6
+kiwisolver==1.5.0
+MarkupSafe==3.0.3
+matplotlib==3.11.1
+mpmath==1.3.0
+networkx==3.6.1
+numpy==2.4.4
+nvidia-ml-py==13.610.43
+opencv-python==5.0.0.93
+packaging==26.2
+pillow==12.2.0
+polars==1.43.2
+polars-runtime-32==1.43.2
+psutil==7.2.2
+pycocotools==2.0.11
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+PyYAML==6.0.3
+requests==2.34.2
+setuptools==78.1.0
+six==1.17.0
+sympy==1.14.0
+torch==2.9.1+cu126
+torchvision==0.24.1+cu126
+typing_extensions==4.15.0
+ultralytics-thop==2.1.6
+urllib3==2.7.0

@@ -4,7 +4,10 @@
 #     pip install -r requirements.txt
 #     pip install -e vendor\ultralytics
 #
-# ultralytics is deliberately absent from this file: it lives in vendor/ as a
+# Direct dependencies only. requirements.lock.txt holds the full pip freeze with
+# every transitive version, for reproducing a result long after the fact.
+#
+# ultralytics is deliberately absent from both files: it lives in vendor/ as a
 # pinned submodule and is installed editable so its source stays patchable.
 # It pulls in numpy, opencv, matplotlib, pyyaml and the rest transitively.
 
