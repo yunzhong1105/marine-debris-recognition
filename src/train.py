@@ -7,6 +7,12 @@ about, so runs stay comparable across experiments.
     python src/train.py --fraction 0.5 --epochs 1 # smoke test (half an epoch)
     python src/train.py --model yolo26n.pt --imgsz 640 --name nano  # NetScore entry
 
+Only the arguments that get changed often have their own flag. Everything else
+Ultralytics accepts goes through --set, so the script never has to grow a
+hundred pass-through options:
+
+    python src/train.py --set copy_paste=0.3 cls=1.0 lr0=0.001
+
 Note the Windows `if __name__ == "__main__"` guard: dataloader workers are
 spawned, not forked, so training must not run at import time.
 """
@@ -14,6 +20,7 @@ spawned, not forked, so training must not run at import time.
 from __future__ import annotations
 
 import argparse
+import ast
 import os
 from pathlib import Path
 
@@ -45,7 +52,36 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--fraction", type=float, default=1.0, help="fraction of train set per epoch")
     p.add_argument("--name", default=None)
     p.add_argument("--resume", action="store_true")
+    p.add_argument(
+        "--set",
+        nargs="*",
+        default=[],
+        metavar="KEY=VALUE",
+        help="any other Ultralytics train argument, passed straight through: "
+        "--set lr0=0.001 copy_paste=0.3 cls=1.0. Applied last, so it overrides "
+        "everything above including the settings this script pins. Ultralytics "
+        "rejects unknown keys, so a typo fails loudly rather than being ignored.",
+    )
     return p.parse_args()
+
+
+def parse_overrides(pairs: list[str]) -> dict:
+    """Turn `KEY=VALUE` strings into typed kwargs.
+
+    literal_eval gives numbers, booleans and lists their real types; anything it
+    cannot parse stays a string, which is what bare words like `optimizer=AdamW`
+    need.
+    """
+    out = {}
+    for item in pairs:
+        key, sep, value = item.partition("=")
+        if not sep:
+            raise SystemExit(f"--set expects KEY=VALUE, got {item!r}")
+        try:
+            out[key] = ast.literal_eval(value)
+        except (ValueError, SyntaxError):
+            out[key] = value
+    return out
 
 
 def relax_shm_pressure() -> None:
@@ -115,9 +151,7 @@ def main() -> None:
         weights, resume = last, str(last)
         print(f"resuming from {last}")
 
-    model = YOLO(weights)
-    model.train(
-        trainer=build_trainer(),
+    settings = dict(
         data=str(data),
         epochs=args.epochs,
         imgsz=args.imgsz,
@@ -135,6 +169,14 @@ def main() -> None:
         seed=0,
         plots=True,
     )
+
+    overrides = parse_overrides(args.set)
+    if overrides:
+        print(f"overrides: {overrides}")
+        settings.update(overrides)
+
+    model = YOLO(weights)
+    model.train(trainer=build_trainer(), **settings)
 
 
 if __name__ == "__main__":
