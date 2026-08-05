@@ -1,0 +1,851 @@
+<title>海廢影像辨識競賽 — 專案筆記</title>
+<style>
+  :root {
+    --bg: #fdfdfb;
+    --fg: #1c1c1a;
+    --muted: #66655f;
+    --line: #e2e0da;
+    --card: #f6f5f1;
+    --accent: #1b6b5a;
+    --warn-bg: #fdf4e3;
+    --warn-line: #d9a441;
+    --danger-bg: #fdeeeb;
+    --danger-line: #c25a45;
+    --ok-bg: #eaf5ef;
+    --ok-line: #3d8f6b;
+    --code-bg: #f0efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181a;
+      --fg: #e4e3de;
+      --muted: #9b9a93;
+      --line: #2e3235;
+      --card: #1e2124;
+      --accent: #63c8ac;
+      --warn-bg: #2b2418;
+      --warn-line: #b8873a;
+      --danger-bg: #2d1d1a;
+      --danger-line: #c9705a;
+      --ok-bg: #17251f;
+      --ok-line: #4f9e7a;
+      --code-bg: #202427;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181a; --fg: #e4e3de; --muted: #9b9a93; --line: #2e3235;
+    --card: #1e2124; --accent: #63c8ac; --warn-bg: #2b2418; --warn-line: #b8873a;
+    --danger-bg: #2d1d1a; --danger-line: #c9705a; --ok-bg: #17251f;
+    --ok-line: #4f9e7a; --code-bg: #202427;
+  }
+  :root[data-theme="light"] {
+    --bg: #fdfdfb; --fg: #1c1c1a; --muted: #66655f; --line: #e2e0da;
+    --card: #f6f5f1; --accent: #1b6b5a; --warn-bg: #fdf4e3; --warn-line: #d9a441;
+    --danger-bg: #fdeeeb; --danger-line: #c25a45; --ok-bg: #eaf5ef;
+    --ok-line: #3d8f6b; --code-bg: #f0efe9;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC",
+                 "PingFang TC", "Microsoft JhengHei", sans-serif;
+    line-height: 1.75;
+    margin: 0;
+    padding: 0 1.5rem 6rem;
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; }
+
+  header.title {
+    padding: 3.5rem 0 2rem;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 2.5rem;
+  }
+  header.title h1 { font-size: 2rem; margin: 0 0 .4rem; letter-spacing: -.01em; }
+  header.title .sub { color: var(--muted); font-size: 1rem; }
+
+  h2 {
+    font-size: 1.45rem;
+    margin: 3.5rem 0 1rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--line);
+    letter-spacing: -.01em;
+  }
+  h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; margin-right: .5rem; }
+  h3 { font-size: 1.12rem; margin: 2rem 0 .6rem; }
+  h4 { font-size: 1rem; margin: 1.4rem 0 .4rem; color: var(--muted); }
+  p { margin: .7rem 0; }
+
+  code {
+    background: var(--code-bg);
+    padding: .12em .38em;
+    border-radius: 3px;
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .9rem 1.1rem;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; font-size: .85rem; }
+
+  .tablewrap { overflow-x: auto; margin: 1.2rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; padding: .5rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); font-size: .84rem; text-transform: uppercase; letter-spacing: .04em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .box { border-left: 3px solid; border-radius: 0 6px 6px 0; padding: .9rem 1.2rem; margin: 1.3rem 0; }
+  .box p:first-child { margin-top: 0; } .box p:last-child { margin-bottom: 0; }
+  .warn { background: var(--warn-bg); border-color: var(--warn-line); }
+  .danger { background: var(--danger-bg); border-color: var(--danger-line); }
+  .ok { background: var(--ok-bg); border-color: var(--ok-line); }
+  .note { background: var(--card); border-color: var(--muted); }
+  .box .label { font-weight: 700; display: block; margin-bottom: .3rem; font-size: .9rem; }
+
+  nav.toc {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 1.3rem 1.6rem;
+    margin-bottom: 2rem;
+  }
+  nav.toc h2 { margin: 0 0 .7rem; font-size: 1rem; border: none; padding: 0; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  nav.toc ol { margin: 0; padding-left: 1.4rem; columns: 2; column-gap: 2.5rem; }
+  @media (max-width: 40rem) { nav.toc ol { columns: 1; } }
+  nav.toc li { margin: .25rem 0; break-inside: avoid; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  .prob { border: 1px solid var(--line); border-radius: 8px; margin: 1.4rem 0; overflow: hidden; }
+  .prob > .head { background: var(--card); padding: .7rem 1.1rem; font-weight: 600; border-bottom: 1px solid var(--line); }
+  .prob > .body { padding: .2rem 1.1rem 1rem; }
+  .prob .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .05em;
+    padding: .1rem .5rem; border-radius: 3px; margin-right: .6rem; vertical-align: .1em;
+    background: var(--accent); color: var(--bg);
+  }
+  dl.kv { margin: .6rem 0; }
+  dl.kv dt { font-weight: 600; margin-top: .7rem; font-size: .92rem; }
+  dl.kv dd { margin: .15rem 0 0 0; padding-left: 1.1rem; border-left: 2px solid var(--line); color: var(--fg); }
+
+  ul, ol { padding-left: 1.4rem; }
+  li { margin: .3rem 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2rem 0; }
+  .meta { color: var(--muted); font-size: .88rem; }
+  strong { font-weight: 650; }
+</style>
+
+<div class="wrap">
+
+<header class="title">
+  <h1>2026 海廢影像辨識國際 AI 競賽 — 專案筆記</h1>
+  <div class="sub">從零到訓練的完整紀錄：流程、設定、踩過的坑、必須知道的觀念</div>
+  <p class="meta">最後更新 2026-08-06 &nbsp;·&nbsp; repo <code>yunzhong1105/marine-debris-recognition</code> &nbsp;·&nbsp; 分支 <code>baseline/yolo26m-1024</code></p>
+</header>
+
+<nav class="toc">
+  <h2>目錄</h2>
+  <ol>
+    <li><a href="#c1">競賽規則與時程</a></li>
+    <li><a href="#c2">核心策略：長尾決定分數</a></li>
+    <li><a href="#c3">資料集分析</a></li>
+    <li><a href="#c4">環境建置</a></li>
+    <li><a href="#c5">專案結構</a></li>
+    <li><a href="#c6">資料前處理</a></li>
+    <li><a href="#c7">訓練</a></li>
+    <li><a href="#c8">推論與評分</a></li>
+    <li><a href="#c9">遇到的問題與解法</a></li>
+    <li><a href="#c10">必須理解的觀念</a></li>
+    <li><a href="#c11">Git 與版控決策</a></li>
+    <li><a href="#c12">待辦事項</a></li>
+  </ol>
+</nav>
+
+
+<h2 id="c1"><span class="num">1</span>競賽規則與時程</h2>
+
+<p>主辦：海洋委員會、國家海洋研究院、DIGITIMES、工研院、AWS。任務是 34 類海洋廢棄物的<strong>物件偵測</strong>。</p>
+
+<div class="tablewrap">
+<table>
+  <tr><th>項目</th><th>內容</th></tr>
+  <tr><td>評分指標</td><td><strong>COCO API 的 mAP@0.5</strong>，34 類算術平均</td></tr>
+  <tr><td>晉級門檻</td><td>初賽 mAP@0.5 需達 <strong>0.6</strong></td></tr>
+  <tr><td>初賽</td><td>2026-08-11 ～ 2026-09-01</td></tr>
+  <tr><td>複賽</td><td>2026-09-03 ～ 2026-09-17</td></tr>
+  <tr><td>上傳限制</td><td>每日 3 次，以最後一次計分</td></tr>
+  <tr><td>提交格式</td><td>CSV：<code>image_filename, label_id, x, y, w, h, confidence</code></td></tr>
+  <tr><td>額外獎項</td><td>最佳輕量化優化獎 2 名，用 NetScore</td></tr>
+  <tr><td>規則</td><td>允許開源預訓練模型與外部資料，需附來源說明；得獎者須繳交權重與程式碼</td></tr>
+</table>
+</div>
+
+<h3>NetScore 公式（輕量化獎）</h3>
+<pre><code>Ω = 20·log₁₀(a² / (√p · √m))
+  = 40·log₁₀(a) − 10·log₁₀(p) − 10·log₁₀(m)
+
+a = 精確度   p = 模型大小(MB)   m = 運算複雜度(GFLOPs)</code></pre>
+
+<div class="box note">
+<span class="label">把公式展開才看得出重點</span>
+<p>精確度的係數是 <strong>40</strong>，模型大小和 GFLOPs 各是 <strong>−10</strong>。也就是說<strong>精確度的影響力是模型大小的 4 倍</strong>。所以輕量化獎不該無腦選最小的模型，而該選「夠小之中最準的」。等有這個資料集上 n 和 s 的真實 mAP 之後，兩個都代入算一次 Ω 再決定，別憑 COCO 的數字猜。</p>
+</div>
+
+
+<h2 id="c2"><span class="num">2</span>核心策略：長尾決定分數</h2>
+
+<div class="box danger">
+<span class="label">這是整個專案最重要的一件事</span>
+<p>mAP 是<strong>對 34 類取算術平均</strong>，每一類的權重都是 1/34 = 2.94%，<strong>與樣本數無關</strong>。全資料集只有 13 個框的 <code>aluminum_packaging</code>，和有 5,641 個框的 <code>plastic_bottle</code>，對分數的影響完全一樣。</p>
+</div>
+
+<p>換算成實際的投資報酬：</p>
+<ul>
+  <li>把 <code>plastic_bottle</code> 從 0.85 提到 0.90 → <strong>+0.15 分</strong></li>
+  <li>把 <code>aluminum_packaging</code> 從 0 救到 0.50 → <strong>+1.5 分</strong>（10 倍）</li>
+</ul>
+
+<p>試算晉級門檻：若 20 個頭部類別 AP 都做到 0.80，14 個尾部類別只有 0.30：</p>
+<pre><code>(20 × 0.8 + 14 × 0.3) / 34 = 0.594   ← 剛好卡在 0.6 門檻下面</code></pre>
+
+<p><strong>尾部類別就是晉級與否的決定因素。</strong>換更大的模型、拉高解析度，主要幫助的是那些本來就做得不錯的頭部類別。真正的分數在 oversample、copy-paste augmentation、以及下面的細粒度混淆群。</p>
+
+<h3>細粒度混淆群（mAP 主要流失處）</h3>
+<p>這些類別在視覺上極難分辨，往往要判斷「裝什麼」而非「長什麼樣」：</p>
+<ul>
+  <li><code>plastic_bottle</code> / <code>non_food_plastic_bottle</code> / <code>non_pet_food_beverage_container</code></li>
+  <li><code>cup</code> / <code>takeaway_beverage_cup</code></li>
+  <li><code>foam_buoy_float</code> / <code>fishing_buoy_float</code> / <code>soft_float</code></li>
+  <li><code>fishing_net_rope</code> / <code>net_like_item</code> / <code>fishing_gear</code></li>
+</ul>
+<p>另外 <code>other</code>(1,590) 和 <code>anthropogenic_fragment</code>(6,107) 是定義模糊的 catch-all，<strong>標註本身必有噪聲</strong>，而且會吃掉其他類別的 recall。</p>
+
+
+<h2 id="c3"><span class="num">3</span>資料集分析</h2>
+
+<p>格式是 <strong>COCO JSON</strong>（不是 YOLO txt），單一檔案 <code>train_label.json</code>。</p>
+
+<div class="tablewrap">
+<table>
+  <tr><th>項目</th><th class="num">數值</th></tr>
+  <tr><td>影像數</td><td class="num">15,127</td></tr>
+  <tr><td>標註框數</td><td class="num">32,189</td></tr>
+  <tr><td>類別數</td><td class="num">34</td></tr>
+  <tr><td>無標註影像</td><td class="num">0</td></tr>
+  <tr><td>平均框數／圖</td><td class="num">2.13（中位數 1，最多 95）</td></tr>
+</table>
+</div>
+
+<p class="meta">註：官網說「逾 2 萬張」，實際拿到 15,127，初賽可能只放部分。</p>
+
+<h3>類別分布（極度長尾）</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>頭部類別</th><th class="num">數量</th><th class="num">佔比</th><th>尾部類別</th><th class="num">數量</th></tr>
+  <tr><td>anthropogenic_fragment</td><td class="num">6,107</td><td class="num">18.97%</td><td>net_like_item</td><td class="num">304</td></tr>
+  <tr><td>plastic_bottle</td><td class="num">5,641</td><td class="num">17.52%</td><td>plastic_lid</td><td class="num">207</td></tr>
+  <tr><td>foam_buoy_float</td><td class="num">2,174</td><td class="num">6.75%</td><td>toothbrush</td><td class="num">178</td></tr>
+  <tr><td>fishing_net_rope</td><td class="num">1,804</td><td class="num">5.60%</td><td>fishing_gear</td><td class="num">169</td></tr>
+  <tr><td>fishing_buoy_float</td><td class="num">1,715</td><td class="num">5.33%</td><td>fish_trap_and_bait</td><td class="num">152</td></tr>
+  <tr><td>other</td><td class="num">1,590</td><td class="num">4.94%</td><td>cigarette_pack</td><td class="num">139</td></tr>
+  <tr><td>plastic_bottle_cap</td><td class="num">1,361</td><td class="num">4.23%</td><td>syringe_needle</td><td class="num">112</td></tr>
+  <tr><td>soft_float</td><td class="num">1,159</td><td class="num">3.60%</td><td>non_food_plastic_container</td><td class="num">62</td></tr>
+  <tr><td>glass_bottle</td><td class="num">1,060</td><td class="num">3.29%</td><td><strong>aluminum_packaging</strong></td><td class="num"><strong>13</strong></td></tr>
+</table>
+</div>
+<p>前 2 類佔 36.5%，後 8 類加起來不到 3%。</p>
+
+<h3>影像特性</h3>
+<ul>
+  <li><strong>解析度混雜</strong>：主力 1108×1477 直式（約 8,400 張，像是標準化的調查拍攝），另有 4032×3024 手機原圖、820×547 小圖。</li>
+  <li><strong>框大小</strong>：中位數佔全圖面積 2.9%。換算 640px 下約 10% 屬 COCO small、35% medium、55% large。</li>
+</ul>
+
+<h3>實際看圖的觀察</h3>
+<ol>
+  <li><strong>偽裝色（camouflage）</strong>：一張 95 框的圖裡，保麗龍碎片、漂流木、白色礫石在色彩與紋理上幾乎同構。這類圖靠低解析度抓不到。</li>
+  <li><strong>難易度落差極大</strong>：也有很多是沙灘上一個寶特瓶佔滿畫面，基本白送。</li>
+  <li><strong>漁業廢棄物場景</strong>：漁網、浮球、竹竿、漂流木交纏，框重疊嚴重。</li>
+</ol>
+
+<div class="box ok">
+<span class="label">標註品質很好</span>
+<p>轉檔時 32,189 個框<strong>全數保留</strong>：零裁切、零退化框、零 iscrowd、零缺圖。省掉了通常要花的資料清理時間。</p>
+</div>
+
+
+<h2 id="c4"><span class="num">4</span>環境建置</h2>
+
+<h3>環境 A：Windows 筆電（初期開發）</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>元件</th><th>版本／規格</th><th>為什麼這樣選</th></tr>
+  <tr><td>GPU</td><td>RTX 4060 Laptop, 8GB</td><td>sm_89</td></tr>
+  <tr><td>RAM</td><td>Windows 16GB（WSL 只有 7GB）</td><td>訓練跑 Windows 原生，不跑 WSL</td></tr>
+  <tr><td>Python</td><td>3.12.10</td><td>WSL 內的 3.14 太新，PyTorch 沒有對應 wheel</td></tr>
+  <tr><td>PyTorch</td><td>2.9.1+cu126</td><td>刻意不用更新的 cu128/129，比賽期間穩定優先</td></tr>
+  <tr><td>Ultralytics</td><td>v8.4.115（pin 住）</td><td>幾乎每天發版，浮動會導致分數無法重現</td></tr>
+</table>
+</div>
+
+<h3>環境 B：Jupyter 容器（正式訓練）</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>元件</th><th>版本／規格</th></tr>
+  <tr><td>GPU</td><td><strong>RTX 5000 Ada, 32GB</strong>（sm_89，與筆電同架構，torch wheel 不用換）</td></tr>
+  <tr><td>算力</td><td>約筆電的 4 倍（12,800 vs 3,072 CUDA cores）</td></tr>
+  <tr><td>使用者</td><td><code>jovyan</code>，conda env <code>marine</code>，有免密碼 sudo</td></tr>
+</table>
+</div>
+
+<h3>Windows 安裝步驟</h3>
+<pre><code>cd C:\Python_workspace\marine-debris-recognition
+.\.venv\Scripts\Activate.ps1
+
+# 若 PowerShell 擋執行原則
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass</code></pre>
+
+<h3>新環境完整安裝</h3>
+<pre><code># 1. clone（一定要 --recurse-submodules，否則 vendor/ 是空的）
+git clone --recurse-submodules https://github.com/yunzhong1105/marine-debris-recognition.git
+cd marine-debris-recognition
+git checkout baseline/yolo26m-1024
+
+# 2. 虛擬環境
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1        # Linux: source .venv/bin/activate
+
+# 3. 套件（順序不能顛倒！）
+pip install -r requirements.txt
+pip install -e vendor\ultralytics
+
+# 4. 確認 CUDA 真的可用
+python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+
+# 5. 前處理
+python src/coco_to_yolo.py
+python src/make_split.py --folds 5</code></pre>
+
+<div class="box warn">
+<span class="label">步驟 3 的兩行不能對調</span>
+<p><code>requirements.txt</code> 要先裝好 torch，<code>pip install -e vendor\ultralytics</code> 才不會自己去 PyPI 抓一份 <strong>CPU 版 torch</strong> 蓋掉。裝反了訓練會跑不動，而且錯誤訊息不會告訴你原因。</p>
+</div>
+
+<h3>容器環境的額外步驟</h3>
+<pre><code># 資料目錄權限（掛進來的資料屬於 UID 1001）
+sudo chown -R $(id -u):$(id -g) ~/data
+
+# opencv 需要的系統函式庫（headless 容器沒有）
+sudo apt-get update && sudo apt-get install -y libgl1 libglib2.0-0</code></pre>
+
+<div class="box warn">
+<span class="label">容器重建後要重跑</span>
+<p>apt 裝的套件和 chown 的權限在容器重建後都會消失。把上面兩行記進 setup 筆記。</p>
+</div>
+
+
+<h2 id="c5"><span class="num">5</span>專案結構</h2>
+
+<pre><code>marine-debris-recognition/
+├── .venv/                    虛擬環境（不進版控）
+├── data/                     資料（不進版控）
+│   ├── train_dataset/
+│   │   ├── images/           15,127 張原始影像（唯讀，不要動）
+│   │   ├── labels/           YOLO txt，由 coco_to_yolo.py 產生
+│   │   └── train_label.json  官方 COCO 標註
+│   └── splits/               fold{0..4}_{train,val}.txt
+├── configs/
+│   ├── classes.yaml          34 類名稱（進版控）
+│   └── fold{0..4}.yaml       dataset config（生成物，不進版控）
+├── src/
+│   ├── paths.py              專案與資料根目錄解析
+│   ├── coco_to_yolo.py       COCO JSON → YOLO txt
+│   ├── make_split.py         5-fold 分層切分 + 產生 dataset config
+│   ├── train.py              訓練入口
+│   ├── predict.py            產生 submission.csv
+│   └── evaluation.py         用 pycocotools 算 mAP@0.5
+├── vendor/ultralytics/       git submodule，pin 在 98a9cfd (v8.4.115)
+├── patches/                  對 vendor 的改動（目前為空）
+├── runs/                     訓練輸出（不進版控）
+├── requirements.txt          直接依賴
+└── requirements.lock.txt     完整 36 個 pin</code></pre>
+
+<h3>兩個關鍵設計決策</h3>
+
+<h4>① <code>labels/</code> 必須跟 <code>images/</code> 同層</h4>
+<p>Ultralytics 找標註的方式是把影像路徑字串裡的 <code>/images/</code> <strong>直接換成</strong> <code>/labels/</code>，副檔名換 <code>.txt</code>。這是硬編碼慣例，資料夾不能改名。</p>
+
+<h4>② 用檔案清單，不分資料夾</h4>
+<p>一般 YOLO 教學會叫你複製成 <code>images/train/</code> 和 <code>images/val/</code>。這裡不這樣做——15k 張 JPEG 複製一份很浪費，要跑 5-fold 就得複製 5 次。改用 <code>fold0_train.txt</code> 每行一個絕對路徑，切分只是換一個文字檔。</p>
+
+<h3>資料根目錄解析（<code>src/paths.py</code>）</h3>
+<p>資料集不一定要放在專案裡。解析順序：</p>
+<ol>
+  <li><code>$MDR_DATA</code> 環境變數</li>
+  <li><code>&lt;專案&gt;/data</code></li>
+  <li><code>&lt;專案&gt;/../data</code>（資料與專案並列時）</li>
+</ol>
+<pre><code># 資料放在完全不相干的位置
+export MDR_DATA=/mnt/nas/marine-debris
+python src/make_split.py --folds 5</code></pre>
+
+
+<h2 id="c6"><span class="num">6</span>資料前處理</h2>
+
+<h3><code>coco_to_yolo.py</code></h3>
+<p>把 COCO 的 <code>[x, y, w, h]</code>（絕對像素、<strong>左上角</strong>）轉成 YOLO 的 <code>cls cx cy w h</code>（正規化、<strong>中心點</strong>）。</p>
+<p>官方 <code>category_id</code> 本來就是連續的 0–33，直接對應 YOLO class id，<strong>不需要重新編號</strong>。</p>
+<pre><code>python src/coco_to_yolo.py
+# → data/train_dataset/labels/ 底下 15,127 個 txt
+# → configs/classes.yaml</code></pre>
+
+<h3><code>make_split.py</code> — 5-fold 分層切分</h3>
+
+<div class="box danger">
+<span class="label">為什麼不能隨機切驗證集</span>
+<p><code>aluminum_packaging</code> 全資料集只有 <strong>13 個框</strong>。隨機切 90/10，val 平均只分到 1.3 個框，運氣差就是 0 個。</p>
+<ul>
+  <li>val 有 0 個框 → 這類完全沒有分數訊號</li>
+  <li>val 有 1 個框 → AP 只可能接近 0 或接近 1，<strong>擲硬幣</strong></li>
+</ul>
+<p>這一類佔 mAP 的 2.94%，於是總 mAP 會因為純粹的運氣上下跳 <strong>±3 分</strong>。你做了一個真的有效、值 +1 分的改動，但雜訊有 ±3 分——<strong>你根本分不出來是改動有效還是運氣好</strong>，接下來所有決策都建立在噪聲上。</p>
+</div>
+
+<p>用的是 <strong>iterative stratification</strong>（Sechidis et al. 2011）。因為一張圖可能同時有好幾個類別，這屬於 multi-label 問題，一般的分層抽樣不適用。演算法會先安排最稀有的類別（它的自由度最低），每張圖分配給「目前最缺該類別」的那一折。</p>
+
+<h4>實際切分結果</h4>
+<pre><code>folds: 5   images/fold: [3034, 3023, 3016, 3022, 3032]
+
+class                          total    f0    f1    f2    f3    f4
+aluminum_packaging                13     3     3     3     2     2
+non_food_plastic_container        62    12    11    12    12    15
+syringe_needle                   112    22    24    22    22    22
+...</code></pre>
+<p>13 個框被切成 <strong>3/3/3/2/2</strong>，已是最佳分佈；其餘 33 類每折都 ≥11 個。這個演算法是<strong>決定性的</strong>，重跑結果完全一致。</p>
+
+<div class="box warn">
+<span class="label">但要誠實講</span>
+<p>13 個框就算切得再完美也不可能穩定。真正的解法是 <strong>K-fold 交叉驗證</strong>——訓 5 個模型，每張圖都輪流當過一次 val，那 13 個框每一個都會被評估到。代價是訓練成本 5 倍。</p>
+<p><strong>實務折衷</strong>：日常快速迭代用單一 fold（看頭部類別夠了），要對尾部類別下最終判斷時才跑 K-fold。</p>
+</div>
+
+
+<h2 id="c7"><span class="num">7</span>訓練</h2>
+
+<h3>基本指令</h3>
+<pre><code># baseline
+python src/train.py
+
+# 換一折
+python src/train.py --fold 1
+
+# 大 GPU + 大模型 + 高解析度
+python src/train.py --model yolo26l.pt --imgsz 1280 --batch 8 --workers 8
+
+# 輕量化獎
+python src/train.py --model yolo26n.pt --imgsz 640 --name nano
+
+# 快速 smoke test
+python src/train.py --epochs 1 --fraction 0.05 --name smoke
+
+# 中斷續跑
+python src/train.py --name yolo26m_1024_fold0 --resume</code></pre>
+
+<h3>參數表</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>參數</th><th>預設</th><th>說明</th></tr>
+  <tr><td><code>--model</code></td><td><code>yolo26m.pt</code></td><td>權重或 .yaml，首次執行自動下載</td></tr>
+  <tr><td><code>--fold</code></td><td>0</td><td>用哪一折（0–4）</td></tr>
+  <tr><td><code>--data</code></td><td>—</td><td>直接指定 dataset yaml，覆蓋 --fold</td></tr>
+  <tr><td><code>--epochs</code></td><td>100</td><td></td></tr>
+  <tr><td><code>--imgsz</code></td><td>1024</td><td>資料有菸蒂、吸管、碎片，640 抓不到</td></tr>
+  <tr><td><code>--batch</code></td><td>4</td><td>依 GPU 調整，見下表</td></tr>
+  <tr><td><code>--workers</code></td><td>4</td><td>受主記憶體與 /dev/shm 限制</td></tr>
+  <tr><td><code>--patience</code></td><td>30</td><td>早停</td></tr>
+  <tr><td><code>--fraction</code></td><td>1.0</td><td>每 epoch 只用部分訓練集，快篩用</td></tr>
+  <tr><td><code>--resume</code></td><td>關</td><td>從 last.pt 續跑</td></tr>
+</table>
+</div>
+<p>寫死不開放調整（確保實驗可比較）：<code>device=0</code>、<code>amp=True</code>、<code>cache=False</code>、<code>seed=0</code>、<code>plots=True</code>。</p>
+
+<h3>依 GPU 的建議配置</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>GPU</th><th>模型</th><th class="num">imgsz</th><th class="num">batch</th><th class="num">workers</th><th>實測 VRAM</th></tr>
+  <tr><td>RTX 4060 Laptop 8GB</td><td>yolo26m</td><td class="num">1024</td><td class="num">3</td><td class="num">4</td><td>4.7 GB</td></tr>
+  <tr><td>RTX 4060 Laptop 8GB</td><td>yolo26m</td><td class="num">1024</td><td class="num">4</td><td class="num">4</td><td>6.09–6.38 GB（餘裕過薄，會炸）</td></tr>
+  <tr><td>RTX 5000 Ada 32GB</td><td>yolo26l</td><td class="num">1280</td><td class="num">8</td><td class="num">8</td><td>估計 ~21 GB</td></tr>
+</table>
+</div>
+
+<div class="box danger">
+<span class="label">留 20% VRAM 餘裕</span>
+<p>batch 4 時餘裕只剩約 1.2GB，一個外部事件（闔上筆電螢幕觸發顯示模式切換）就把跑了 13 小時的訓練弄掛了。<strong>每個 batch 的物件數會浮動</strong>——資料裡有單張 95 個框的圖，碰到密集批次時峰值會往上飄。</p>
+</div>
+
+<h3>YOLO26 各尺寸（COCO 官方數字）</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>模型</th><th class="num">mAP</th><th class="num">參數</th><th class="num">GFLOPs</th></tr>
+  <tr><td>yolo26n</td><td class="num">40.9</td><td class="num">2.4M</td><td class="num">5.4</td></tr>
+  <tr><td>yolo26s</td><td class="num">48.6</td><td class="num">9.5M</td><td class="num">20.7</td></tr>
+  <tr><td>yolo26m</td><td class="num">53.1</td><td class="num">20.4M</td><td class="num">68.2</td></tr>
+  <tr><td>yolo26l</td><td class="num">55.0</td><td class="num">24.8M</td><td class="num">86.4</td></tr>
+  <tr><td>yolo26x</td><td class="num">57.5</td><td class="num">55.7M</td><td class="num">193.9</td></tr>
+</table>
+</div>
+<p><strong>m → l 性價比最好</strong>：參數只多 21%，mAP +1.9。l → x 參數要多 125% 才換到 +2.5。</p>
+
+<h3>YOLO26 相對 YOLO11 的架構變更</h3>
+<ul>
+  <li>移除 DFL（Distribution Focal Loss），簡化偵測頭</li>
+  <li>端對端無 NMS 推論（預設）</li>
+  <li><strong>Progressive Loss + STAL</strong>：專門改善小物體標籤覆蓋——對菸蒂／吸管／碎片正好對症</li>
+  <li>MuSGD optimizer</li>
+</ul>
+
+<h3>實測效能</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>環境</th><th>設定</th><th class="num">速度</th><th class="num">一個 epoch</th><th class="num">100 epochs</th></tr>
+  <tr><td>RTX 4060 Laptop</td><td>yolo26m@1024 b4</td><td class="num">2.7–3.3 it/s</td><td class="num">約 20 分</td><td class="num">約 34 小時</td></tr>
+  <tr><td>RTX 5000 Ada</td><td>yolo26l@1280 b8</td><td class="num">待測</td><td class="num">待測</td><td class="num">估 15–20 小時</td></tr>
+</table>
+</div>
+<p>半個 epoch（1,512 iterations）實測 9 分 17 秒；含驗證與存檔共 11.2 分鐘。</p>
+
+<h3>訓練輸出</h3>
+<pre><code>runs/&lt;name&gt;/
+├── weights/best.pt      驗證分數最好 ← 推論用這個
+├── weights/last.pt      最後一個 epoch ← --resume 用這個
+├── results.csv          每 epoch 指標
+├── results.png          訓練曲線
+├── labels.jpg           類別與框的分佈
+├── train_batch*.jpg     增強後的訓練影像
+└── val_batch*_pred.jpg  預測 vs 標註對照</code></pre>
+
+<div class="box warn">
+<span class="label">開跑後先看 train_batch0.jpg</span>
+<p>確認 mosaic 拼接後<strong>框還貼在物體上</strong>。這是唯一能及早發現資料管線出錯的地方，等 30 小時後才發現就太晚了。</p>
+</div>
+
+<h3>目前進度紀錄</h3>
+<pre><code>yolo26m @ 1024, fold0, batch 4（筆電）
+epoch    mAP50     mAP50-95
+  1      0.2122     0.1589
+  2      0.2204     0.1610
+（第 3 epoch 因 VRAM 餘裕不足崩潰）</code></pre>
+
+
+<h2 id="c8"><span class="num">8</span>推論與評分</h2>
+
+<h3><code>predict.py</code> — 產生 submission.csv</h3>
+<pre><code>python src/predict.py --weights runs/&lt;name&gt;/weights/best.pt \
+                      --source data/splits/fold0_val.txt \
+                      --out runs/&lt;name&gt;/submission_fold0val.csv</code></pre>
+
+<div class="box danger">
+<span class="label">最關鍵的設定：conf=0.001、max_det=300</span>
+<p>AP 是 <strong>precision-recall 曲線下的面積</strong>，算法是把所有預測框依信心分數由高到低排序，逐一納入，每步計算 precision 和 recall。</p>
+<p>用 <code>conf=0.25</code> 過濾等於丟掉所有低分預測。那些預測大部分是錯的——<strong>但其中一小部分是對的，而且它們是唯一能把曲線推到高 recall 區段的東西</strong>。砍掉它們，PR 曲線就在中途被截斷，面積直接少一塊。</p>
+<p><strong>關鍵直覺：對 mAP 而言，多送一個低分的錯誤框代價幾乎是零；但漏掉一個物件，recall 永久少一塊。這是不對稱的，所以要盡量多送。</strong></p>
+<p>而 Ultralytics <code>predict</code> 的<strong>預設 conf 就是 0.25</strong>。用預設值產生 submission 會無謂損失大量分數——這是新手最常見的翻車點。</p>
+</div>
+
+<p><code>conf=0.25</code> 是<strong>畫圖給人看</strong>用的，<code>conf=0.001</code> 是<strong>計分</strong>用的，兩者用途完全不同。</p>
+
+<h4>其他設計要點</h4>
+<ul>
+  <li>Ultralytics 回傳<strong>中心點</strong> xywh，官方要<strong>左上角</strong>，腳本用 <code>xyxy</code> 轉換</li>
+  <li><code>--source</code> 吃資料夾或 .txt 清單，給 txt 時會先抽驗路徑是否存在</li>
+  <li><code>stream=True</code>，15k 張的結果不會一次塞進記憶體</li>
+  <li>跑完會算平均每張幾個框，<strong>低於 10 會警告</strong>（通常代表 conf 被誤設高了）</li>
+</ul>
+
+<h3><code>evaluation.py</code> — 對齊官方計分</h3>
+<pre><code>python src/evaluation.py --pred runs/&lt;name&gt;/submission_fold0val.csv \
+                         --split data/splits/fold0_val.txt</code></pre>
+
+<div class="box note">
+<span class="label">刻意直接讀 submission.csv</span>
+<p>而不是讀某個內部格式。這樣本地評分吃的就是你要上傳的那個檔案，<strong>座標慣例若有錯（中心點 vs 左上角、正規化 vs 絕對）本地就會現形</strong>，不會等到排行榜才發現。</p>
+</div>
+
+<ul>
+  <li>資料集的 <code>image_id</code> 是 hex 字串，pycocotools 內部會排序與雜湊處理，腳本全部重新映射成 int</li>
+  <li><code>--split</code> 沒給會從 CSV 推斷範圍，<strong>但會警告</strong>：模型完全沒出框的圖會被排除，分數虛高</li>
+  <li><code>maxDets</code> 設成 <code>[1, 10, 300]</code>——必須留三個值，否則 pycocotools 的 <code>summarize()</code> 會索引越界</li>
+  <li>輸出每類的 gt 數、預測數、AP@0.5，<strong>由差到好排序</strong>，並算出離 0.6 門檻還差多少</li>
+</ul>
+
+<div class="box warn">
+<span class="label">尚未驗證的假設</span>
+<p>官方的 <code>x, y, w, h</code> <strong>假設</strong>是絕對像素、左上角（跟 train_label.json 一致），<code>label_id</code> 假設是 0–33。初賽開始後<strong>務必用官方 sample submission 對一次</strong>。要改也只是 predict.py 裡那幾行 writerow。</p>
+</div>
+
+<p>Ultralytics 訓練時印的 mAP50 是它自己算的，跟 COCO API 不完全一致——<strong>可以用來比較實驗好壞，不能用來判斷離 0.6 門檻多遠</strong>。</p>
+
+
+<h2 id="c9"><span class="num">9</span>遇到的問題與解法</h2>
+
+<div class="prob">
+  <div class="head"><span class="tag">環境</span>Windows 沒有 Python</div>
+  <div class="body">
+    <dl class="kv">
+      <dt>症狀</dt><dd><code>python.exe</code> 只有 Microsoft Store 的 stub，執行無輸出。</dd>
+      <dt>原因</dt><dd>WSL 內是 Python 3.14，太新，PyTorch 沒有對應 wheel。訓練要跑 Windows 原生（WSL 只分到 7GB RAM）。</dd>
+      <dt>解法</dt><dd><code>winget install --id Python.Python.3.12 --scope user</code>（user scope 免 UAC）</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">記憶體</span><code>workers=8</code> → <code>RuntimeError: bad allocation</code></div>
+  <div class="body">
+    <dl class="kv">
+      <dt>症狀</dt><dd>堆疊指向 <code>F.conv2d</code>，<strong>看起來像 VRAM 不足</strong>。</dd>
+      <dt>真正原因</dt><dd><strong>是主記憶體不足。</strong>mosaic 增強每個 sample 要組 2048×2048 緩衝，8 個 worker 各自預取，撐爆 16GB。實測 <code>batch=4/workers=4</code> 只用 6.09GB VRAM 完全正常。</dd>
+      <dt>解法</dt><dd><code>--workers 4</code></dd>
+      <dt>教訓</dt><dd><code>bad allocation</code> 是 Windows 的 host 端 OOM，會被 CUDA 呼叫堆疊蓋掉，非常誤導。</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">記憶體</span>驗證階段 CUDA OOM（短測試抓不到）</div>
+  <div class="body">
+    <dl class="kv">
+      <dt>症狀</dt><dd>訓練正常，一進驗證就 <code>CUDA error: out of memory</code>。</dd>
+      <dt>原因</dt><dd>Ultralytics 上游 <code>engine/trainer.py:293</code> 把驗證 dataloader 設成 <strong><code>batch_size * 2</code></strong>。batch=4 訓練沒事，驗證變成 batch 8 @1024 就爆。</dd>
+      <dt>最陰險的地方</dt><dd><strong>跟記憶體碎片累積有關</strong>：30 個 iteration 的 smoke test 會通過，1512 個 iteration 的半 epoch 才會炸。短測試抓不到，會在跑了一兩小時後才死。</dd>
+      <dt>解法</dt><dd><code>src/train.py</code> 的 <code>ValBatchCappedTrainer</code> 子類覆寫 <code>get_dataloader</code>，在 <code>mode == "val"</code> 時把 batch 砍半以抵銷上游的 *2。用子類而非改 vendor，升級 ultralytics 時不會衝突。</dd>
+      <dt>順帶一提</dt><dd>Windows <strong>不支援 <code>expandable_segments</code></strong>，那條最常見的碎片化解法在這裡只會跳警告不生效。</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">記憶體</span>訓練中途 CUDA OOM（闔上螢幕）</div>
+  <div class="body">
+    <dl class="kv">
+      <dt>症狀</dt><dd>epoch 3 的 backward 崩潰，process 直接死掉（不是暫停）。</dd>
+      <dt>原因</dt><dd>訓練峰值 6.38G + 桌面 0.61G = 6.99G / 8.19G，<strong>餘裕僅約 1.2G</strong>。闔蓋觸發顯示模式切換，驅動重新配置 framebuffer，瞬間越線。</dd>
+      <dt>解法</dt><dd>降到 <code>--batch 3</code>（峰值 4.7G，餘裕 2.9G）。<strong>幾乎不花時間成本</strong>——epoch 時間由「處理多少張圖」決定，不是「跑幾個 iteration」。</dd>
+      <dt>附帶</dt><dd><code>powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0</code> 等指令關掉闔蓋與睡眠。</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">路徑</span>改名專案目錄 → 全面失效</div>
+  <div class="body">
+    <dl class="kv">
+      <dt>症狀</dt><dd><code>import ultralytics</code> → <code>ModuleNotFoundError</code>；configs 與 splits 內 15,127 條路徑全部指向不存在的位置。</dd>
+      <dt>原因</dt><dd>editable install 是用<strong>絕對路徑</strong>註冊的；生成的 split 清單也是絕對路徑。</dd>
+      <dt>解法</dt><dd>
+        <pre><code>pip install -e vendor\ultralytics      # 重新註冊
+python src/make_split.py --folds 5     # 重生成路徑</code></pre>
+        並把 <code>make_split.py</code> 改成從檔案位置<strong>自動推導</strong>根目錄（後來抽出成 <code>src/paths.py</code>），以後改名不會再壞。
+      </dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">續跑</span><code>--resume</code> 會挑錯 checkpoint</div>
+  <div class="body">
+    <dl class="kv">
+      <dt>原因</dt><dd>原本傳 <code>resume=True</code>，Ultralytics 收到布林值會呼叫 <code>get_latest_run()</code>，挑「最近被寫入的」run 目錄——多個實驗並行時會接到別人的 checkpoint。</dd>
+      <dt>解法</dt><dd>改成直接傳 <code>runs/&lt;name&gt;/weights/last.pt</code> 的明確路徑，找不到就報錯而不是默默接錯。</dd>
+      <dt>好消息</dt><dd>Ultralytics 的 <code>check_resume</code> 把 <code>batch</code>、<code>workers</code>、<code>imgsz</code> 等列在<strong>允許覆寫</strong>清單裡（原始碼註解寫 "allow arg updates to reduce memory"），所以續跑時<strong>可以降 batch</strong>。</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">容器</span>資料目錄沒有寫入權限</div>
+  <div class="body">
+    <dl class="kv">
+      <dt>症狀</dt><dd><code>PermissionError: [Errno 13] ... '/home/jovyan/data/train_dataset/labels'</code></dd>
+      <dt>原因</dt><dd>掛進來的資料屬於 <strong>UID 1001</strong>，而你是 <code>jovyan</code>，落在 other，權限只有 <code>r-x</code>。目錄的寫入權限決定能不能在裡面新增檔案。</dd>
+      <dt>解法</dt><dd><code>sudo chown -R $(id -u):$(id -g) ~/data</code></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">容器</span>部分影像不可讀，被<strong>靜默</strong>丟棄</div>
+  <div class="body">
+    <dl class="kv">
+      <dt>症狀</dt><dd><code>605 images, 5 corrupt</code> — 訊息寫 "corrupt"，實際是 <code>Permission denied</code>。</dd>
+      <dt>嚴重性</dt><dd>Ultralytics <strong>直接跳過繼續訓練，不會停下來</strong>。0.8% 換算全資料集約 125 張圖連同標註被丟棄。</dd>
+      <dt>原因</dt><dd>非遞迴 chown 只改了目錄，<strong>個別影像檔案本身仍缺 other 的讀取權限</strong>。</dd>
+      <dt>解法</dt><dd>
+        <pre><code>sudo chown -R $(id -u):$(id -g) ~/data
+rm -f ~/data/train_dataset/labels.cache   # 這步不能省！</code></pre>
+      </dd>
+    </dl>
+    <div class="box danger">
+      <span class="label">為什麼一定要刪 labels.cache</span>
+      <p><code>dataset.py:164</code> 的快取雜湊是 <code>get_hash(label_files + im_files)</code>，<strong>只看檔名和大小</strong>。改權限不會改變任何一個，所以快取<strong>不會自動失效</strong>——那些圖會一直被排除，而且之後不再出現任何警告。</p>
+    </div>
+    <p class="meta">掃描時要看到 <code>0 corrupt</code> 才能往下跑。</p>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">容器</span><code>libGL.so.1: cannot open shared object file</code></div>
+  <div class="body">
+    <dl class="kv">
+      <dt>原因</dt><dd><code>opencv-python</code> 完整版連結了 OpenGL 以支援 <code>cv2.imshow()</code> 那類 GUI 功能。<strong>動態連結在 import 時就發生</strong>，即使訓練從不開視窗也會炸。</dd>
+      <dt>解法</dt><dd><code>sudo apt-get install -y libgl1 libglib2.0-0</code><br>
+      <code>libglib2.0-0</code> 是刻意一起裝的——裝完 libGL 之後<strong>下一個錯誤幾乎必定是 <code>libgthread-2.0.so.0</code></strong>。</dd>
+      <dt>為什麼不用 headless 版</dt><dd>ultralytics 的 <code>pyproject.toml</code> 明確宣告 <code>opencv-python&gt;=4.6.0</code>。換成 <code>opencv-python-headless</code> 後，只要再跑一次 <code>pip install -e vendor/ultralytics</code>，pip 就會把完整版裝回來，然後又壞掉。</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">容器</span><code>/dev/shm</code> 爆掉 → DataLoader worker bus error</div>
+  <div class="body">
+    <dl class="kv">
+      <dt>症狀</dt><dd><code>unable to write to file &lt;/torch_...&gt;: No space left on device (28)</code><br><code>DataLoader worker killed by signal: Bus error</code></dd>
+      <dt>原因</dt><dd><strong>Docker 預設 /dev/shm 只有 64MB。</strong>PyTorch 的 DataLoader worker 透過共享記憶體把 tensor 傳回主行程，1280px × 8 workers 遠超過 64MB。</dd>
+      <dt>注意</dt><dd>跟前面的 <code>bad allocation</code> <strong>不是同一件事</strong>——那次是主記憶體不足，這次是共享記憶體分區太小，<strong>主機記憶體再大也沒用</strong>。</dd>
+      <dt>解法 A</dt><dd><code>docker run --shm-size=8g</code> 或 <code>--ipc=host</code>（最乾淨，但託管環境多半改不了）</dd>
+      <dt>解法 B</dt><dd><code>train.py</code> 的 <code>relax_shm_pressure()</code> 偵測 /dev/shm 大小，小於 2 GiB 時自動切換成 <strong>file_system</strong> 共享策略——改用一般檔案傳遞 tensor，不需容器權限。</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="prob">
+  <div class="head"><span class="tag">已知但未修</span>train/val 共用同一個 labels.cache</div>
+  <div class="body">
+    <p>Ultralytics 的快取路徑是 <code>Path(label_files[0]).parent.with_suffix(".cache")</code>，train 和 val 都指向同一個 <code>labels/</code> 目錄，所以會寫到同一個檔案、互相覆蓋。</p>
+    <p><strong>不是正確性問題</strong>——雜湊會驗證，不符就重新掃描。只是每次訓練啟動時 train 和 val 各要重掃一次（約 3 秒），從來不會命中快取。成本可忽略，暫不處理。</p>
+  </div>
+</div>
+
+
+<h2 id="c10"><span class="num">10</span>必須理解的觀念</h2>
+
+<h3>① mAP 是類別的算術平均，不是框的平均</h3>
+<p>這是整場比賽最重要的一句話。13 個框的類別和 5,641 個框的類別權重相同。所有優化決策都應該從這裡出發。</p>
+
+<h3>② AP 是 PR 曲線下的面積，而低分框是免費的</h3>
+<p>多送錯誤框的代價趨近於零，漏抓的代價是永久的。所以計分時 <code>conf=0.001</code>，不是 <code>0.25</code>。</p>
+
+<h3>③ 本地指標必須對齊官方指標</h3>
+<p>Ultralytics 的 mAP50 ≠ COCO API 的 mAP@0.5。前者可以比較實驗好壞，後者才能判斷離門檻多遠。</p>
+
+<h3>④ 驗證集的切法比模型架構更重要</h3>
+<p>切錯了，你的所有實驗結論都是噪聲。稀有類別必須刻意分層，最終判斷要用 K-fold。</p>
+
+<h3>⑤ YOLO26 的 end2end 與 mAP 的張力</h3>
+<div class="tablewrap">
+<table>
+  <tr><th></th><th>one-to-many head（傳統）</th><th>one-to-one head（預設）</th></tr>
+  <tr><td>訓練</td><td>一個物件配對到<strong>很多個</strong>預測</td><td>一個物件配對到<strong>剛好一個</strong></td></tr>
+  <tr><td>推論</td><td>產生重複框 → <strong>需要 NMS</strong></td><td>天生不重複 → <strong>不需 NMS</strong></td></tr>
+  <tr><td>優點</td><td>候選框密集，<strong>低分尾巴長</strong></td><td>快、部署簡單</td></tr>
+</table>
+</div>
+<p>one-to-one 是為<strong>降低延遲</strong>設計的。但對照觀念②，<strong>密集的低分候選框正是餵養高 AP 的東西</strong>。這場比賽主線只看 mAP、沒有延遲限制，所以大概率該用 <code>end2end=False</code>——但要實測，別預設接受 default。Ultralytics 官方 benchmark 把 mAP 和 mAP(e2e) 分成兩欄列，就是因為兩者確實有差。</p>
+
+<h3>⑥ Ultralytics 的路徑慣例是字串替換</h3>
+<p>影像路徑裡的 <code>/images/</code> 換成 <code>/labels/</code>。這決定了目錄結構不能亂改。</p>
+
+<h3>⑦ editable install 記的是絕對路徑</h3>
+<p>搬動或改名專案目錄後必須 <code>pip install -e</code> 重新註冊，否則 <code>import</code> 直接失敗。</p>
+
+<h3>⑧ smoke test 至少要跑到第一次驗證結束</h3>
+<p>否則抓不到「驗證階段 batch×2 OOM」那類跟碎片累積有關的問題，會在跑了一兩小時後才死。</p>
+
+<h3>⑨ 三種記憶體要分清楚</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>種類</th><th>典型錯誤訊息</th><th>調整方式</th></tr>
+  <tr><td>VRAM（顯示記憶體）</td><td><code>CUDA error: out of memory</code></td><td>降 batch、降 imgsz</td></tr>
+  <tr><td>主記憶體 RAM</td><td><code>bad allocation</code>（Windows）</td><td>降 workers</td></tr>
+  <tr><td>共享記憶體 /dev/shm</td><td><code>Bus error</code>、<code>No space left on device</code></td><td>加大 shm 或改 file_system 策略</td></tr>
+</table>
+</div>
+<p>三者的錯誤訊息都會誤導人指向 GPU，實際原因往往不是。</p>
+
+
+<h2 id="c11"><span class="num">11</span>Git 與版控決策</h2>
+
+<h3>追蹤的檔案（13 個）</h3>
+<pre><code>.gitattributes  .gitignore  .gitmodules  README.md
+configs/classes.yaml
+requirements.txt  requirements.lock.txt
+src/*.py
+vendor/ultralytics   ← submodule 指標，不是 1030 個檔案</code></pre>
+
+<h3>刻意不追蹤的東西</h3>
+<div class="tablewrap">
+<table>
+  <tr><th>項目</th><th>理由</th></tr>
+  <tr><td><code>*.pt</code></td><td>權重會自動下載或由訓練產生。曾誤把 48MB 的 yolo26m/n.pt 放進 initial commit，後來改寫歷史移除，<code>.git</code> 從 44M 縮到 69K</td></tr>
+  <tr><td><code>configs/fold*.yaml</code></td><td>生成物，且<strong>內含機器專屬絕對路徑</strong>——正是改名時壞掉的東西</td></tr>
+  <tr><td><code>data/</code>、<code>runs/</code>、<code>.venv/</code></td><td>資料、輸出、環境</td></tr>
+</table>
+</div>
+
+<h3>為什麼 vendor 用 submodule 而不是直接 commit</h3>
+<p><code>vendor/ultralytics</code> <strong>本身就是一個 git repo</strong>。直接 <code>git add</code> 會變成 "embedded repository"：外層只記路徑、內容沒進去，clone 下來是空目錄，而且 git 不會提醒。想真的塞進去得先刪它的 <code>.git</code>——那就把 1,030 個上游檔案變成自己的了，之後沒辦法 merge 新版。</p>
+<p>submodule 只記一行：</p>
+<pre><code>160000 commit 98a9cfde3119079568620bd43c26bb541c61ac8d  vendor/ultralytics</code></pre>
+<p>這比 tag 更嚴格——<strong>tag 可以被上游移動，commit hash 不行</strong>。三週後要重現某次分數時，這個差別是實質的。</p>
+
+<h3>為什麼不能用 <code>pip freeze &gt; requirements.txt</code></h3>
+<ol>
+  <li><strong><code>--extra-index-url</code> 會消失</strong>。freeze 只輸出 <code>torch==2.9.1+cu126</code>，但 PyPI 沒有 +cu126 的 build，新機器直接報 <code>No matching distribution</code>。</li>
+  <li><strong>ultralytics 那行會毀掉 submodule 架構</strong>。freeze 產生 <code>-e git+https://...ultralytics.git@&lt;sha&gt;#egg=ultralytics</code>，會叫 pip 重新 clone 一份到 <code>./src/</code>，繞過 vendor。結果是<strong>你對 vendor 的修改靜默失效</strong>。</li>
+</ol>
+<p>所以分成兩個檔案：<code>requirements.txt</code>（3 個直接依賴，平常安裝用）和 <code>requirements.lock.txt</code>（36 個完整 pin，重現用，檔頭記錄了上述兩個陷阱）。</p>
+
+
+<h2 id="c12"><span class="num">12</span>待辦事項</h2>
+
+<h3>阻塞項</h3>
+<ul>
+  <li><strong>驗證 submission 格式</strong>：初賽開始後用官方 sample submission 確認 <code>x,y,w,h</code> 是否真的是絕對像素左上角、<code>label_id</code> 是否 0–33</li>
+  <li><strong><code>main</code> 分支還停在 initial commit</strong>：所有基礎建設都只在 <code>baseline/yolo26m-1024</code> 上，需要合併</li>
+</ul>
+
+<h3>實驗計畫（一次只改一個變數）</h3>
+<ol>
+  <li><code>yolo26l @ 1280</code> — 新 baseline</li>
+  <li><code>yolo26m @ 1280</code> — 隔離「解析度」的貢獻</li>
+  <li><code>yolo26l @ 1024</code> — 隔離「容量」的貢獻</li>
+  <li><code>end2end=True/False</code> 的 A/B</li>
+</ol>
+
+<h3>長尾優化（分數所在）</h3>
+<ol>
+  <li>含尾部類別的圖 oversample（最省事，先做）</li>
+  <li>Copy-paste augmentation：把尾部類別的 crop 貼到其他海灘背景</li>
+  <li>類別加權 loss</li>
+  <li>細粒度混淆群加一顆 crop classifier 做二階段重分類</li>
+</ol>
+
+<h3>其他</h3>
+<ul>
+  <li>多尺度 TTA + WBF 融合</li>
+  <li><code>yolo26n</code> 攻輕量化獎（同一份 pipeline，成本極低）</li>
+  <li>K-fold 交叉驗證，取得尾部類別的可靠訊號</li>
+  <li>建立 <code>experiments.md</code> 記錄每次 run 的設定與分數——<code>runs/</code> 不進版控，過兩週會分不清哪個 run 對應哪份設定</li>
+</ul>
+
+<hr>
+<p class="meta">這份文件應隨專案更新。新增問題、解法或設定時直接編輯 <code>project-notes.html</code>，並在對應章節加入條目。</p>
+
+</div>
